@@ -43,6 +43,7 @@ class PokeDataKt(
     fun setType(typeSlot: Int, typeToChangeTo: Int): Unit {
         if (!(typeSlot in 1..2)){
             print("Invalid type slot: " + typeSlot + " -- type change ignored.")
+            return;
         }
         if ((!(typeToChangeTo in 0..17)) || typeToChangeTo == 9){
             print("Invalid type: " + typeToChangeTo + " -- Setting type to Normal.")
@@ -68,6 +69,7 @@ class PokeDataKt(
     fun setAbility(abilitySlot: Int, abilityToChangeTo: Int): Unit {
         if (!(abilitySlot in 1..2)){
             print("Invalid ability slot: " + abilitySlot+ " -- ability change ignored.")
+            return;
         }
         if ((!(abilityToChangeTo in 0..77))){
             print("Invalid ability: " + abilityToChangeTo+ " -- Setting ability to Stench (01) instead.")
@@ -83,5 +85,20 @@ class PokeDataKt(
         setAbility(1, secondAbility)
     }
 
+    fun setHeldItem(itemSlot: Int, item: Int): Unit {
+        if (!(itemSlot in 0..1)){
+            print("Erroneous held item slot: " + itemSlot + " -- item change ignored")
+            return
+        }
+        if (!(item in 0..346)){
+            print("Erroneous held item: " + item + " -- setting it to item 0 instead")
+            heldItems[itemSlot] = 0
+        }
+        else heldItems[itemSlot] = item
+    }
+
+    fun setHeldItems(firstItem: Int, secondItem: Int): Unit {
+        
+    }
 
 }
