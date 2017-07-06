@@ -1,14 +1,20 @@
 package emeraldrandomizer
 
+import java.util.*
+
 class PokeDataKt(
         var stats: IntArray = intArrayOf(1,1,1,1,1,1),
         var types: IntArray = intArrayOf(0,0),
         var evs: IntArray = intArrayOf(0,0,0,0,0,0),
         var abilities: IntArray = intArrayOf(1,0),
         var heldItems: IntArray = intArrayOf(0,0),
-        var statSwaps: IntArray = intArrayOf(0,1,2,3,4,5,6),
+        var statSwapArray: IntArray = intArrayOf(0,1,2,3,4,5,6),
         var TMCompat: IntArray = intArrayOf(0,0,0,0,0,0,0,0),
         var tutorCompat: IntArray = intArrayOf(0,0,0,0)) {
+
+    private var attackHash: HashMap<Int, Int> = hashMapOf()
+    private var availableMoves: MutableList<Int> = mutableListOf()
+
 
     constructor(data: IntArray): this(){
         if (data.size < 28){
@@ -41,12 +47,12 @@ class PokeDataKt(
     }
 
     fun setType(typeSlot: Int, typeToChangeTo: Int): Unit {
-        if (!(typeSlot in 1..2)){
-            print("Invalid type slot: " + typeSlot + " -- type change ignored.")
-            return;
+        if (typeSlot !in 1..2){
+            print("Invalid type slot: $typeSlot -- type change ignored.")
+            return
         }
-        if ((!(typeToChangeTo in 0..17)) || typeToChangeTo == 9){
-            print("Invalid type: " + typeToChangeTo + " -- Setting type to Normal.")
+        if ((typeToChangeTo !in 0..17) || typeToChangeTo == 9){
+            print("Invalid type: $typeToChangeTo -- Setting type to Normal.")
             types[typeSlot] = 0
         }
         else types[typeSlot] = typeToChangeTo
@@ -59,7 +65,7 @@ class PokeDataKt(
 
     fun setEVs(evIn: IntArray): Unit {
         for (i in 0..6){
-            if (!(evIn[i] in 0..3)){
+            if (evIn[i] !in 0..3){
                 print("Bad EV Value: " + evIn[i] + " -- using 0 instead")
                 evs[i] = 0
             } else evs[i] = evIn[i]
@@ -67,17 +73,17 @@ class PokeDataKt(
     }
 
     fun setAbility(abilitySlot: Int, abilityToChangeTo: Int): Unit {
-        if (!(abilitySlot in 1..2)){
-            print("Invalid ability slot: " + abilitySlot+ " -- ability change ignored.")
-            return;
+        if (abilitySlot !in 1..2){
+            print("Invalid ability slot: $abilitySlot -- ability change ignored.")
+            return
         }
-        if ((!(abilityToChangeTo in 0..77))){
-            print("Invalid ability: " + abilityToChangeTo+ " -- Setting ability to Stench (01) instead.")
-            abilities[abilitySlot] == 1
+        if (abilityToChangeTo !in 0..77){
+            print("Invalid ability: $abilityToChangeTo -- Setting ability to Stench (01) instead.")
+            abilities[abilitySlot] = 1
         } else if (abilitySlot == 0 && abilityToChangeTo == 0){
             print("First ability cannot be 0 -- Changing ability to Stench (01) instead")
         }
-        else abilities[abilitySlot] == abilityToChangeTo
+        else abilities[abilitySlot] = abilityToChangeTo
     }
 
     fun setAbilities(firstAbility: Int, secondAbility: Int): Unit {
@@ -86,19 +92,99 @@ class PokeDataKt(
     }
 
     fun setHeldItem(itemSlot: Int, item: Int): Unit {
-        if (!(itemSlot in 0..1)){
-            print("Erroneous held item slot: " + itemSlot + " -- item change ignored")
+        if (itemSlot !in 0..1){
+            print("Erroneous held item slot: $itemSlot -- item change ignored")
             return
         }
-        if (!(item in 0..346)){
-            print("Erroneous held item: " + item + " -- setting it to item 0 instead")
+        if (item !in 0..346){
+            print("Erroneous held item: $item -- setting it to item 0 instead")
             heldItems[itemSlot] = 0
         }
         else heldItems[itemSlot] = item
     }
 
     fun setHeldItems(firstItem: Int, secondItem: Int): Unit {
-        
+        setHeldItem(0, firstItem)
+        setHeldItem(1, secondItem)
     }
 
+    fun setStatSwaps(swaps: IntArray){
+        if (swaps.size != 6){
+            print("Error with stat swap array lengths. No stat swapping was done")
+            return
+        }
+
+        if (swaps.filter({ (it > 5) or (it < 0) }).size != 6) {
+            print("Error with stat swap points. No stat swapping was done")
+            return
+        }
+        statSwapArray = swaps.copyOf()
+    }
+
+    fun setTMCompatability(compatabilityArray: IntArray){
+        if (compatabilityArray.size < 8){
+            print("TM Compatability array is too small")
+            return
+        }
+        TMCompat = compatabilityArray.copyOf()
+    }
+
+    fun setTutorCompatability(compatabilityArray: IntArray){
+        if (compatabilityArray.size < 4){
+            print("Tutor Compatabilty array is too small")
+            return
+        }
+
+        tutorCompat = compatabilityArray.copyOf()
+    }
+
+    fun getStat(slot: Int) = if (slot in 0..5) stats[slot] else 1
+
+    fun getType(slot: Int) = if (slot in 0..1) stats[slot] else 0
+
+    fun getEV(slot: Int) = if (slot in 0..5) evs[slot] else 0
+
+    fun getAbility(slot: Int) = if (slot in 0..1) abilities[slot] else 0
+
+    fun getItems() = heldItems
+
+    fun getItem(slot: Int) = if (slot in 0..1) heldItems[slot] else 0
+
+    fun getTMCompatability() = TMCompat
+
+    fun getTutorCompatability() = tutorCompat
+
+    fun swapStats(){
+        if ((stats.size != 6) or (statSwapArray.size != 6) or (evs.size != 6)){
+            print("Error with stat swap array lengths. No stats swapped")
+            return
+        }
+        val statBackup = stats.copyOf()
+        val evsBackup = evs.copyOf()
+        for (i in 0..5){
+            stats[i] = statBackup[statSwapArray[i]]
+            evs[i] = evsBackup[statSwapArray[i]]
+        }
+    }
+
+    fun swapStats(swaps: IntArray){
+        setStatSwaps(swaps)
+        swapStats()
+    }
+
+    fun randomizeStats(){
+        val statBackup = stats.copyOf()
+        val evsBackup = evs.copyOf()
+        var slots = mutableListOf<Int>(0,1,2,3,4,5)
+        val rand = Random()
+
+        var randChox: Int
+        for (i in 0..5){
+            randChox = slots.removeAt(rand.nextInt(slots.size))
+            stats[i] = statBackup[randChox]
+            evs[i] = evsBackup[randChox]
+            statSwapArray[i] = randChox
+        }
+
+    }
 }
