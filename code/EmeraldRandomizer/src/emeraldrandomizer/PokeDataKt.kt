@@ -185,6 +185,57 @@ class PokeDataKt(
             evs[i] = evsBackup[randChox]
             statSwapArray[i] = randChox
         }
+    }
+
+    fun randomizeAbilities(){
+        val rand = Random()
+        val alAbil: MutableList<Int> = abilities.toMutableList()
+        abilities[0] = alAbil.removeAt(rand.nextInt(alAbil.size))
+        if (rand.nextInt(100) < 50){
+            abilities[1] = alAbil.removeAt(rand.nextInt(alAbil.size))
+        }
+        else {
+            abilities[1] = abilities[0]
+        }
+    }
+
+    fun getTypeList(): MutableList<Int>{
+        val typeRange = 0..17
+        val returnList: MutableList<Int> = mutableListOf<Int>()
+        returnList.addAll(typeRange.asIterable())
+        returnList.removeAt(9)
+        return returnList
+    }
+
+    fun randomizeTypes() {
+        val rand = Random()
+        val alTypes: MutableList<Int> = getTypeList()
+        val baseType = alTypes.removeAt(rand.nextInt(alTypes.size))
+        types[0] = baseType
+        if (rand.nextInt(100) < 47) {
+            types[1] = alTypes.removeAt(rand.nextInt(alTypes.size))
+        } else {
+            types[1] = baseType
+        }
+    }
+
+    fun rerandomizeTypes(){
+        if (types.size != 2){
+            types = intArrayOf(0,0)
+            println(" !! Types array recast to allow 2 slots")
+        }
+
+        if (types[0] == types[1]){
+            val rand = Random()
+            val alTypes: MutableList<Int> = getTypeList()
+
+            if (rand.nextInt(100) <= 21){
+                types[1] = alTypes[rand.nextInt(alTypes.size)]
+            }
+        }
+    }
+
+    fun derandomizeTypes(){
 
     }
 }
