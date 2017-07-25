@@ -1,6 +1,8 @@
 package emeraldrandomizer
 
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class PokeDataKt(
         var stats: IntArray = intArrayOf(1,1,1,1,1,1),
@@ -12,9 +14,8 @@ class PokeDataKt(
         var TMCompat: IntArray = intArrayOf(0,0,0,0,0,0,0,0),
         var tutorCompat: IntArray = intArrayOf(0,0,0,0)) {
 
-    private var attackHash: HashMap<Int, Int> = hashMapOf()
-    private var availableMoves: MutableList<Int> = mutableListOf()
-
+    var attackHash: HashMap<Int, Int> = hashMapOf()
+    var availableMoves: ArrayList<Int> = ArrayList<Int>()
 
     constructor(data: IntArray): this(){
         if (data.size < 28){
@@ -236,6 +237,170 @@ class PokeDataKt(
     }
 
     fun derandomizeTypes(){
+        if (types.size != 2){
+            types = intArrayOf(0,0)
+            println(" !! Types array recast to allow 2 slots")
+        }
+        if (types[0] != types[2]){
+            val rand = Random()
+            if (rand.nextInt(100) <= 21){
+                types[1] = types[0]
+            }
+        }
+    }
 
+    fun randomizeItems(){
+        val ak = ArrayKeeper()
+        val alItems: ArrayList<Int> = ak.getArrayListInt(ak.usableItems)
+        val rand = Random()
+
+        for (i in 0..1){
+            if (rand.nextInt(100) < 21){
+                heldItems[i] = alItems.removeAt(rand.nextInt(alItems.size))
+            }
+            else heldItems[i] = 0
+        }
+    }
+
+    fun rerandomizeItems(){
+        val ak = ArrayKeeper()
+        val alItems = ak.getArrayListInt(ak.usableItems)
+        val rand = Random()
+
+        for (i in 0..1) {
+            if ((heldItems[i] == 0) and (rand.nextInt(100) < 21)) {
+                heldItems[i] = alItems.removeAt(rand.nextInt(alItems.size))
+            }
+        }
+    }
+
+    fun derandomizeItems() {
+        val rand = Random()
+        for (i in 0..1) {
+            if ((heldItems[i] != 0) and (rand.nextInt(100) < 21)) {
+                heldItems[i] = 0
+            }
+        }
+    }
+
+    fun randomizeTMCompatability() {
+        val rand = Random()
+        for (i in 0..TMCompat.size - 1) {
+            TMCompat[i] = rand.nextInt(256)
+        }
+    }
+
+    fun rerandomizeTMCompatability(){
+        val rand = Random()
+        for (i in 0..TMCompat.size - 1){
+            TMCompat[i] = TMCompat[i] or (rand.nextInt(256) and rand.nextInt(256) and rand.nextInt(256))
+        }
+    }
+
+    fun derandomizeTMCompatability() {
+        val rand = Random()
+        for (i in TMCompat.indices) {// => 1/8 chance
+            TMCompat[i] = TMCompat[i] and ((rand.nextInt(256) and rand.nextInt(256) and rand.nextInt(256)).inv() and 255)
+        }
+    }
+
+
+    fun randomizeTutorCompatability() {
+        val rand = Random()
+        for (i in tutorCompat.indices) {
+            tutorCompat[i] = rand.nextInt(256)
+        }
+        //tutorCompat[3] = tutorCompat[3] & 63; //last 2 bits are 0
+    }
+
+    fun rerandomizeTutorCompatability() {
+        val rand = Random()
+        for (i in tutorCompat.indices) {// => 1/4 chance
+            tutorCompat[i] = tutorCompat[i] or (rand.nextInt(256) and rand.nextInt(256))
+        }
+    }
+
+    fun derandomizeTutorCompatability() {
+        val rand = Random()
+        for (i in tutorCompat.indices) {// => 1/4 chance
+            tutorCompat[i] = tutorCompat[i] and ((rand.nextInt(256) and rand.nextInt(256)).inv() and 255)
+        }
+    }
+
+    fun getAbilityList(): ArrayList<Int> {
+        val alOut = ArrayList<Int>()
+        for (i in 1..76) {
+            alOut.add(i)
+        }
+        alOut.remove(25) //Wonder Guard
+        alOut.remove(59) //Forecast
+        return alOut
+    }
+
+    override fun toString(): String {
+        val lk = ArrayKeeper()
+        val sb = StringBuilder()
+        //try{
+        for (i in 0..5) {
+            if (stats[i] < 10) {
+                sb.append("  ")
+            } else if (stats[i] < 100) {
+                sb.append(" ")
+            }
+            sb.append(stats[i].toString() + " ")
+        }
+        sb.append("  |  ")
+        for (i in 0..5) {
+            if (evs[i] == 0) {
+                sb.append("- ")
+            } else {
+                sb.append(evs[i].toString() + " ")
+            }
+        }
+        sb.append("  | ")
+        val typeList = lk.typeList
+        sb.append(typeList[types[0]])
+        if (types[0] == types[1]) {
+            sb.append("     |  ")
+        } else {
+            sb.append("/" + typeList[types[1]] + " |  ")
+        }
+        val abilityList = lk.abilityList
+        for (j in 0..1) {
+            val abil = abilityList[abilities[j]]
+            sb.append(abil)
+            for (i in abil.length..12) {
+                sb.append(" ")
+            }
+            sb.append(" | ")
+        }
+        val itemList = lk.itemList
+        for (j in 0..1) {
+            val item = itemList[heldItems[j]]
+            sb.append(item)
+            for (i in item.length..12) {
+                sb.append(" ")
+            }
+            sb.append(" | ")
+        }
+
+        return sb.toString()
+        /*} catch (ArrayIndexOutOfBoundsException aioobe){
+            return " >< ERROR! PokeData arrays not normal size!";
+        }*/
+    }
+
+    fun getClone(): PokeDataKt {
+        val out = PokeDataKt()
+        out.setStats(stats[0], stats[1], stats[2], stats[3], stats[4], stats[5])
+        out.setEVs(evs)
+        out.setAbilities(abilities[0], abilities[1])
+        out.setStatSwaps(statSwapArray)
+        out.setTypes(types[0], types[1])
+        out.setHeldItems(heldItems[0], heldItems[1])
+        out.setTMCompatability(TMCompat)
+        out.availableMoves = availableMoves
+        out.attackHash = attackHash
+        return out
     }
 }

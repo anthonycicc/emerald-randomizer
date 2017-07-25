@@ -1521,7 +1521,7 @@ public class EmeraldRandomizerView extends FrameView {
     private void changeROM(){
         changeStarters(); //must come before trainers
         changeTMs();      //must come before trainers
-        randomizePokeData(); //must come before trainers
+        randomizePokeDataKt(); //must come before trainers
         changeWildPokemon();
         changePkmnColors();
         fixDisobedience();
@@ -2700,10 +2700,10 @@ public class EmeraldRandomizerView extends FrameView {
             String[] arPkmn = new ArrayKeeper().getPokemonListGameOrder();
             StringBuilder sb;
 
-            //PokeData-----------------------------------------------------------------------
+            //PokeDataKt-----------------------------------------------------------------------
             int ptr = addy("3203e8");
             int[] arData = new int[28];
-            PokeData pkdt;
+            PokeDataKt pkdt;
 
             out.println(divider);
             out.println("   Pokémon Info List");
@@ -2720,7 +2720,7 @@ public class EmeraldRandomizerView extends FrameView {
                     arData[p] = byteToInt(rom[ptr+p]);
                 }
                 sb = new StringBuilder(String.format("%-10s",arPkmn[i]));
-                pkdt = new PokeData(arData);
+                pkdt = new PokeDataKt(arData);
                 actualOrder[i] = sb.toString() + " | " + pkdt.toString();
             }
             int[] order = ak.getPkmnDexToGameTranscription();
@@ -2875,7 +2875,7 @@ public class EmeraldRandomizerView extends FrameView {
         }
     }
 
-    private void randomizePokeData(){ // [stats,types,abilities,items]
+    private void randomizePokeDataKt(){ // [stats,types,abilities,items]
         boolean[] checks = new boolean[]{cbRandStats.isSelected(),cbRandTypes.isSelected(),
                                     cbRandAbilities.isSelected(),cbRandHeldItems.isSelected(),
                                     cbRandTMLearn.isSelected(),cbMovesets.isSelected(),
@@ -2889,10 +2889,10 @@ public class EmeraldRandomizerView extends FrameView {
         int tutorPtr = addy("61504c");
         int atkPtr = addy("3230dc");
         int[] arData = new int[28];
-        PokeData pkdt = new PokeData();
-        PokeData oldPkdt = new PokeData();
+        PokeDataKt pkdt = new PokeDataKt();
+        PokeDataKt oldPkdt = new PokeDataKt();
         boolean useOld = false;
-        HashMap<Integer,PokeData> savedPkdt = new HashMap<Integer,PokeData>();
+        HashMap<Integer,PokeDataKt> savedPkdt = new HashMap<Integer,PokeDataKt>();
         boolean family = false;
         boolean preevo = false;
         Random rand = new Random();
@@ -2935,7 +2935,7 @@ public class EmeraldRandomizerView extends FrameView {
             }
 
             //import new data
-            pkdt = new PokeData(arData);
+            pkdt = new PokeDataKt(arData);
 
             if (useOld){ //utilize older data --------------------------------------------------------------
                 //check if special case for pre-evo
@@ -2948,7 +2948,7 @@ public class EmeraldRandomizerView extends FrameView {
 
                 //stats
                 if (checks[0]){
-                    pkdt.swapStats(oldPkdt.getStatSwaps());
+                    pkdt.swapStats(oldPkdt.getStatSwapArray());
                 }
 
                 //types
@@ -3217,7 +3217,7 @@ public class EmeraldRandomizerView extends FrameView {
                 if (alFam.size() > 0){ //there a nonconsecutive family member
                     if (highest != i+1) { //only put it in if we need to
                         savedPkdt.put(highest, pkdt.getClone());
-                        //System.out.println(" <> Stored family pokedata: " + (i+1));
+                        //System.out.println(" <> Stored family PokeDataKt: " + (i+1));
                     }
                 }
                 if (i==105) { //hitmonlee
